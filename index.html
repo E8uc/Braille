@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" data-theme="braille">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0524">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Braille Studio</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app" class="app-shell">
+  <aside id="sidebar" class="sidebar" aria-hidden="true">
+    <div class="sidebar-head">
+      <div class="brand"><span class="brand-mark">⣿</span><span>Braille Studio</span></div>
+      <button id="closeSidebar" class="icon-btn" aria-label="Close">×</button>
+    </div>
+    <button id="newImageBtn" class="sidebar-action">New image</button>
+    <button id="clearBtn" class="sidebar-action">Clear workspace</button>
+    <div class="sidebar-section-title">About</div>
+    <div class="recent-list">
+      <div class="recent-item">Local image processing</div>
+      <div class="recent-item">Unicode Braille output</div>
+      <div class="recent-item">No upload required</div>
+    </div>
+  </aside>
+  <button id="scrim" class="scrim" aria-label="Close"></button>
+
+  <header class="topbar">
+    <button id="openSidebar" class="icon-btn" aria-label="Open menu">☰</button>
+    <div class="topbar-title brand"><span class="brand-mark">⣿</span><span>Braille Studio</span></div>
+    <button id="themeBtn" class="icon-btn" aria-label="Theme">•••</button>
+  </header>
+
+  <main class="main">
+    <section class="welcome" id="welcome">
+      <h1>Image to Braille</h1>
+      <p>Convert any image into clean Unicode Braille art, directly in your browser.</p>
+    </section>
+
+    <section class="tools-shell">
+      <header class="tools-header">
+        <button id="backBtn" class="icon-btn" aria-label="Back">‹</button>
+        <div class="tools-title">Braille Tools</div>
+        <div></div>
+      </header>
+
+      <nav class="tools-tabs" id="tabs" aria-label="Braille tools">
+        <button class="tools-tab active" data-tab="convert">Convert</button>
+        <button class="tools-tab" data-tab="adjust">Adjust</button>
+        <button class="tools-tab" data-tab="output">Output</button>
+      </nav>
+
+      <div class="tools-content">
+        <section class="panel active" data-panel="convert">
+          <div class="dropzone" id="dropZone">
+            <div class="drop-icon">⣿</div>
+            <h2>Drop an image here</h2>
+            <p>PNG, JPG, WEBP or GIF</p>
+            <button id="browseBtn" class="main-btn">Choose image</button>
+            <input id="fileInput" type="file" accept="image/*" hidden>
+            <small>Processed locally on your device</small>
+          </div>
+
+          <div class="preview-card hidden" id="previewCard">
+            <div class="card-head"><div><b>Preview</b><span id="fileName">image</span></div><button id="replaceBtn" class="outline-btn">Replace</button></div>
+            <img id="preview" alt="Selected image">
+          </div>
+        </section>
+
+        <section class="panel" data-panel="adjust">
+          <div class="settings-card">
+            <div class="setting-row"><div><b>Width</b><span>Characters per line</span></div><strong id="widthValue">80</strong></div>
+            <input id="widthRange" type="range" min="20" max="180" value="80">
+          </div>
+          <div class="settings-card">
+            <div class="setting-row"><div><b>Rendering</b><span>Choose the conversion style</span></div></div>
+            <div class="choice-grid">
+              <button class="choice active" data-mode="standard">Standard</button>
+              <button class="choice" data-mode="dither">Dither</button>
+            </div>
+          </div>
+          <div class="settings-card">
+            <label class="switch-row"><span><b>Invert</b><small>Reverse light and dark</small></span><input id="invert" type="checkbox"><i></i></label>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="output">
+          <div class="result-head"><div><b>Braille output</b><span id="stats">Ready</span></div><div class="actions"><button id="copyBtn" class="outline-btn">Copy</button><button id="downloadBtn" class="main-btn small">Download</button></div></div>
+          <pre id="output" class="output">Your Braille output will appear here.</pre>
+        </section>
+      </div>
+    </section>
+  </main>
+</div>
+<div id="toast" class="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>
