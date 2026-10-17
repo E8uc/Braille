@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0a0524">
+  <meta name="theme-color" content="#303030">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Braille Studio</title>
@@ -32,12 +32,20 @@
     <div class="topbar-title brand"><span class="brand-mark">⣿</span><span>Braille Studio</span></div>
     <button id="themeBtn" class="icon-btn" aria-label="Theme">•••</button>
   </header>
+  <div class="banner-stripe" aria-hidden="true"></div>
 
   <main class="main">
+    <div class="alert alert-warning">Everything runs locally in your browser. Your images are never uploaded.</div>
+
     <section class="welcome" id="welcome">
-      <h1>Image to Braille</h1>
-      <p>Convert any image into clean Unicode Braille art, directly in your browser.</p>
+      <h1>Welcome to Braille Studio!</h1>
+      <h3>Turn any image into Unicode Braille art</h3>
+      <div class="bs-callout">
+        <p>Drop an image, tweak the width and style, then copy or download the result.</p>
+      </div>
     </section>
+
+    <hr>
 
     <section class="tools-shell">
       <header class="tools-header">
@@ -93,6 +101,15 @@
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <ul>
+      <li>Local processing</li> <span class="sep">|</span>
+      <li>Unicode Braille</li> <span class="sep">|</span>
+      <li>No upload required</li>
+    </ul>
+    <div>&copy; 2026 Braille Studio</div>
+  </footer>
 </div>
 <div id="toast" class="toast"></div>
 <script src="app.js"></script>
