@@ -39,7 +39,7 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
   display:flex;align-items:center;justify-content:center;
   padding:.5rem 1rem;background:var(--bar);margin-bottom:1rem;
 }
-.header-img{display:block;max-width:100%;max-height:72px;width:auto;height:auto;object-fit:contain}
+.header-img{display:block;height:44px;width:auto;max-width:44px;object-fit:contain}
 
 .icon-btn{
   border:1px solid transparent;background:transparent;color:rgba(221,221,221,.6);
@@ -157,7 +157,7 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
   display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.35rem .6rem;
 }
 .site-footer .sep{color:var(--muted)}
-.footer-img{height:1.4em;width:auto;vertical-align:middle;margin-left:.15rem}
+.footer-img{height:1.5em;width:auto;max-width:1.5em;object-fit:contain;vertical-align:middle;margin-left:.15rem}
 
 /* ---------- toast ---------- */
 .toast{
@@ -175,5 +175,4 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
   .welcome h3{font-size:1rem}
   .tools-content{padding:.75rem}
   .dropzone{min-height:260px}
-  .header-img{max-height:56px}
 }
