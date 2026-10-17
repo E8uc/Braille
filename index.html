@@ -11,32 +11,23 @@
 </head>
 <body>
 <div id="app" class="app-shell">
+  <!-- Kept in the DOM (hidden) so app.js bindings keep working -->
   <aside id="sidebar" class="sidebar" aria-hidden="true">
-    <div class="sidebar-head">
-      <div class="brand"><span class="brand-mark">⣿</span><span>Braille Studio</span></div>
-      <button id="closeSidebar" class="icon-btn" aria-label="Close">×</button>
-    </div>
-    <button id="newImageBtn" class="sidebar-action">New image</button>
-    <button id="clearBtn" class="sidebar-action">Clear workspace</button>
-    <div class="sidebar-section-title">About</div>
-    <div class="recent-list">
-      <div class="recent-item">Local image processing</div>
-      <div class="recent-item">Unicode Braille output</div>
-      <div class="recent-item">No upload required</div>
-    </div>
+    <button id="closeSidebar" aria-label="Close"></button>
+    <button id="newImageBtn">New image</button>
+    <button id="clearBtn">Clear workspace</button>
   </aside>
   <button id="scrim" class="scrim" aria-label="Close"></button>
+  <div class="legacy-hidden" hidden>
+    <button id="openSidebar" aria-label="Open menu"></button>
+    <button id="themeBtn" aria-label="Theme"></button>
+  </div>
 
   <header class="topbar">
-    <button id="openSidebar" class="icon-btn" aria-label="Open menu">☰</button>
-    <div class="topbar-title brand"><span class="brand-mark">⣿</span><span>Braille Studio</span></div>
-    <button id="themeBtn" class="icon-btn" aria-label="Theme">•••</button>
+    <img class="header-img" src="assets/IMG_3012.png" alt="Braille Studio">
   </header>
-  <div class="banner-stripe" aria-hidden="true"></div>
 
   <main class="main">
-    <div class="alert alert-warning">Everything runs locally in your browser. Your images are never uploaded.</div>
-
     <section class="welcome" id="welcome">
       <h1>Welcome to Braille Studio!</h1>
       <h3>Turn any image into Unicode Braille art</h3>
@@ -103,12 +94,11 @@
   </main>
 
   <footer class="site-footer">
-    <ul>
-      <li>Local processing</li> <span class="sep">|</span>
-      <li>Unicode Braille</li> <span class="sep">|</span>
-      <li>No upload required</li>
-    </ul>
-    <div>&copy; 2026 Braille Studio</div>
+    <span>an open source project that turns image into braille</span>
+    <span class="sep">|</span>
+    <span>Love you <img class="footer-img" src="assets/IMG_3010.png" alt=""></span>
+    <span class="sep">|</span>
+    <span>@fwp2 on discord</span>
   </footer>
 </div>
 <div id="toast" class="toast"></div>
