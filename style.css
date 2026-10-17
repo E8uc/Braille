@@ -36,7 +36,6 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .app-shell{min-height:100dvh;display:flex;flex-direction:column;position:relative}
 
-/* ---------- navbar ---------- */
 .topbar{
   height:56px;padding:.5rem 1rem;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;
   background:var(--bar);
@@ -50,7 +49,6 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .brand-mark{font-size:1.4rem;color:var(--link)}
 .topbar-title{font-size:1.125rem}
 
-/* Art-Fight-style banner strip (team colours) */
 .banner-stripe{
   height:46px;margin-bottom:1rem;
   background:
@@ -62,7 +60,6 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 
 .main{width:100%;max-width:960px;margin:0 auto;padding:0 15px 1.5rem;flex:1}
 
-/* ---------- alert ---------- */
 .alert{
   padding:.75rem 1.25rem;margin-bottom:1rem;border:1px solid transparent;border-radius:var(--radius);
 }
