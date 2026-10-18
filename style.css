@@ -31,9 +31,6 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .app-shell{min-height:100dvh;display:flex;flex-direction:column;position:relative}
 
-/* hidden-but-present elements (kept so app.js bindings don't break) */
-.sidebar,.scrim,.legacy-hidden{display:none!important}
-
 /* ---------- header: emoji-size image + title ---------- */
 .topbar{
   display:flex;align-items:center;justify-content:center;
@@ -64,7 +61,7 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .bs-callout p{margin:0}
 
 /* ---------- tools card ---------- */
-.tools-shell{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.tools-shell{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;overflow:clip}
 .tools-header{
   padding:.5rem 1rem;display:grid;grid-template-columns:44px 1fr 44px;align-items:center;
   background:var(--card-head);border-bottom:1px solid var(--line-dark);
@@ -127,14 +124,19 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .settings-card input[type=range]{width:100%;accent-color:var(--primary)}
 .setting-row strong{font-size:1.35rem;font-weight:500;color:var(--primary)}
 
-.choice-grid{display:grid;grid-template-columns:1fr 1fr;margin-top:.5rem}
+.choice-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:.4rem;margin-top:.5rem}
 .choice{
-  padding:.375rem .75rem;font:inherit;color:var(--primary);background:transparent;border:1px solid var(--primary);cursor:pointer;
+  padding:.375rem .75rem;font:inherit;color:var(--primary);background:transparent;border:1px solid var(--primary);
+  border-radius:var(--radius);cursor:pointer;transition:color .15s,background-color .15s;
 }
-.choice:first-child{border-radius:var(--radius) 0 0 var(--radius)}
-.choice:last-child{border-radius:0 var(--radius) var(--radius) 0;margin-left:-1px}
 .choice:hover{color:var(--on-primary);background:var(--primary)}
 .choice.active{color:var(--on-primary);background:var(--primary)}
+
+/* stacked sliders / switches inside one card */
+.slider + .slider{margin-top:1rem}
+.slider .setting-row{margin-bottom:.4rem}
+.switch-row + .switch-row{margin-top:.9rem;padding-top:.9rem;border-top:1px solid var(--line)}
+.reset-card{text-align:center}
 
 /* switch */
 .switch-row{display:flex;align-items:center;justify-content:space-between;cursor:pointer}
@@ -152,8 +154,15 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 .output{
   margin:0;min-height:300px;max-height:60vh;overflow:auto;padding:1rem;
   background:var(--bg-dark);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);
-  font:11px/1.05 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;white-space:pre;
+  font:11px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;white-space:pre;text-align:center;
 }
+.output.light{background:#f2f2f2;color:#151515}
+.output.mini{min-height:120px;max-height:240px;padding:.6rem}
+.live-preview{
+  position:sticky;top:0;z-index:5;margin:0 0 1rem;padding:.75rem;background:var(--bg);
+  border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 .5rem .75rem -.5rem rgba(0,0,0,.6);
+}
+.live-preview .result-head{margin-bottom:.5rem}
 
 /* ---------- footer ---------- */
 .site-footer{
@@ -175,6 +184,7 @@ hr{border:0;border-top:1px solid var(--line);margin:1rem 0}
 *{scrollbar-color:#595959 var(--bg-dark)}
 
 @media(max-width:520px){
+  .output.mini{max-height:190px}
   .welcome h1{font-size:1.75rem}
   .welcome h3{font-size:1rem}
   .tools-content{padding:.75rem}
