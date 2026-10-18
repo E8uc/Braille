@@ -11,18 +11,6 @@
 </head>
 <body>
 <div id="app" class="app-shell">
-  <!-- Kept in the DOM (hidden) so app.js bindings keep working -->
-  <aside id="sidebar" class="sidebar" aria-hidden="true">
-    <button id="closeSidebar" aria-label="Close"></button>
-    <button id="newImageBtn">New image</button>
-    <button id="clearBtn">Clear workspace</button>
-  </aside>
-  <button id="scrim" class="scrim" aria-label="Close"></button>
-  <div class="legacy-hidden" hidden>
-    <button id="openSidebar" aria-label="Open menu"></button>
-    <button id="themeBtn" aria-label="Theme"></button>
-  </div>
-
   <header class="topbar">
     <div class="brand">
       <span>Braille Studio</span>
@@ -66,25 +54,69 @@
           </div>
 
           <div class="preview-card hidden" id="previewCard">
-            <div class="card-head"><div><b>Preview</b><span id="fileName">image</span></div><button id="replaceBtn" class="outline-btn">Replace</button></div>
+            <div class="card-head">
+              <div><b>Preview</b><span id="fileName">image</span></div>
+              <div class="actions"><button id="replaceBtn" class="outline-btn">Replace</button><button id="clearBtn" class="outline-btn">Clear</button></div>
+            </div>
             <img id="preview" alt="Selected image">
           </div>
         </section>
 
         <section class="panel" data-panel="adjust">
+          <div class="live-preview">
+            <div class="result-head"><div><b>Live preview</b><span id="miniStats">Ready</span></div></div>
+            <pre id="miniOutput" class="output mini">Choose an image to see it here.</pre>
+          </div>
+
           <div class="settings-card">
             <div class="setting-row"><div><b>Width</b><span>Characters per line</span></div><strong id="widthValue">80</strong></div>
-            <input id="widthRange" type="range" min="20" max="180" value="80">
+            <input id="widthRange" type="range" min="20" max="180" value="80" aria-label="Characters per line">
           </div>
+
           <div class="settings-card">
             <div class="setting-row"><div><b>Rendering</b><span>Choose the conversion style</span></div></div>
             <div class="choice-grid">
-              <button class="choice active" data-mode="standard">Standard</button>
-              <button class="choice" data-mode="dither">Dither</button>
+              <button class="choice active" data-mode="smart" title="Best quality: error diffusion refined dot by dot">Smart</button>
+              <button class="choice" data-mode="floyd" title="Classic Floyd–Steinberg dithering">Floyd</button>
+              <button class="choice" data-mode="atkinson" title="Higher contrast, cleaner highlights">Atkinson</button>
+              <button class="choice" data-mode="ordered" title="Regular pattern, no noise">Ordered</button>
+              <button class="choice" data-mode="threshold" title="Pure on / off, no dithering">Threshold</button>
+              <button class="choice" data-mode="edges" title="Outlines only">Edges</button>
             </div>
           </div>
+
           <div class="settings-card">
+            <div class="slider">
+              <div class="setting-row"><div><b>Detail</b><span>Keeps small features visible</span></div><strong id="detailValue">60</strong></div>
+              <input id="detail" type="range" min="0" max="100" value="60" aria-label="Detail">
+            </div>
+            <div class="slider">
+              <div class="setting-row"><div><b>Sharpness</b><span>Crisper edges</span></div><strong id="sharpnessValue">30</strong></div>
+              <input id="sharpness" type="range" min="0" max="100" value="30" aria-label="Sharpness">
+            </div>
+            <div class="slider">
+              <div class="setting-row"><div><b>Contrast</b><span>Separate light from dark</span></div><strong id="contrastValue">0</strong></div>
+              <input id="contrast" type="range" min="-100" max="100" value="0" aria-label="Contrast">
+            </div>
+            <div class="slider">
+              <div class="setting-row"><div><b>Brightness</b><span>Fewer or more dots</span></div><strong id="brightnessValue">0</strong></div>
+              <input id="brightness" type="range" min="-100" max="100" value="0" aria-label="Brightness">
+            </div>
+            <div class="slider hidden" id="thresholdBox">
+              <div class="setting-row"><div><b>Threshold</b><span>Automatic at 0 · for Threshold and Edges</span></div><strong id="thresholdValue">Auto</strong></div>
+              <input id="threshold" type="range" min="-100" max="100" value="0" aria-label="Threshold">
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <label class="switch-row"><span><b>Auto levels</b><small>Stretch the picture to use every shade</small></span><input id="autoLevels" type="checkbox" checked><i></i></label>
+            <label class="switch-row"><span><b>Trim margins</b><small>Crop empty or single-colour borders</small></span><input id="trim" type="checkbox" checked><i></i></label>
             <label class="switch-row"><span><b>Invert</b><small>Reverse light and dark</small></span><input id="invert" type="checkbox"><i></i></label>
+            <label class="switch-row"><span><b>Fill blank cells</b><small>Keeps spacing in apps that collapse empty Braille</small></span><input id="fillBlank" type="checkbox"><i></i></label>
+          </div>
+
+          <div class="settings-card reset-card">
+            <button id="resetBtn" class="outline-btn">Reset adjustments</button>
           </div>
         </section>
 
