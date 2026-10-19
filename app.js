@@ -3,7 +3,8 @@
  *
  * Pipeline (every stage is memoised, so moving one slider only re-runs what comes after it):
  *   crop → detail-preserving downscale → tone (levels / clarity / contrast) → ink (polarity + alpha)
- *   → sharpen → quantise (error diffusion / ordered / threshold / edges) → refine → pack to ⠿
+ *   → sharpen → quantise (error diffusion / ordered / threshold / edges) → refine (dot-by-dot search,
+ *   structure-aware for small pictures) → pack to ⠿
  *
  * The engine part has no DOM dependency; the UI part only starts when a document exists.
  */
@@ -15,6 +16,7 @@
   var MAX_ROWS = 800;        // safety cap for very tall images
   var ASPECT = 2;            // braille cell height / width (monospace)
   var REFINE_LIMIT = 700000; // skip the refine pass above this many dots
+  var STRUCT_LIMIT = 9000;   // structure-aware refine is slower, so only small pictures (where every dot counts) use it
   var BAYER = [
      0, 32,  8, 40,  2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26,
     12, 44,  4, 36, 14, 46,  6, 38, 60, 28, 52, 20, 62, 30, 54, 22,
@@ -396,7 +398,7 @@
   /* ───────────────────────────── stage 6: refine (direct binary search) ─────────────────────────────
      Starting from an error-diffused result, flip single dots whenever that makes the picture, seen through a
      small blur (a stand-in for the eye), closer to the target. Gives crisper edges and cleaner tones. */
-  var C1 = [1, 4, 6, 4, 1];
+  var C1 = [1, 4, 6, 4, 1], G5 = C1;
   function refine(t, b, w, h) {
     var P = 2, W = w + 4, H = h + 4, n = W * H, x, y, i, j, k, dx, dy;
     var d = new Float32Array(n), bp = new Uint8Array(n);
@@ -447,6 +449,98 @@
     return b;
   }
 
+  /* Structure-aware variant for small pictures. Same dot-by-dot search, but the score also contains a local
+     structure term (contrast/structure part of SSIM over 5x5 windows, as in "Structure-aware halftoning",
+     Pang et al., SIGGRAPH 2008): the blurred dots must follow the target's edges, lines and small features,
+     not just its average tone. Cleaner outlines and fewer stray dots when only a few dozen dots are available. */
+  var STRUCT_BETA = 1.5, SSIM_C2 = 58.5;
+  function refineStructure(t, b0, w, h) {
+    var P = 4, W = w + 2 * P, H = h + 2 * P, n = W * H, x, y, i, k, m, s, dx, dy;
+    var bp = new Uint8Array(n), inside = new Uint8Array(n);
+    var T = new Float64Array(n), U = new Float64Array(n), TB = new Float64Array(n);
+    for (y = 0; y < h; y++) {
+      for (x = 0; x < w; x++) { i = (y + P) * W + x + P; bp[i] = b0[y * w + x]; T[i] = t[y * w + x]; inside[i] = 1; }
+    }
+    // kernels: 3x3 "eye" blur, 5x5 statistics window, and the table mapping (changed pixel, window) -> slot in a 7x7 patch
+    var h9 = new Float64Array(9), o9 = new Int32Array(9), g25 = new Float64Array(25), slot = new Int32Array(225), soff = new Int32Array(49);
+    for (dy = -1, k = 0; dy <= 1; dy++) for (dx = -1; dx <= 1; dx++, k++) { h9[k] = (2 - Math.abs(dx)) * (2 - Math.abs(dy)) / 16; o9[k] = dy * W + dx; }
+    for (dy = -2, m = 0; dy <= 2; dy++) for (dx = -2; dx <= 2; dx++, m++) g25[m] = G5[dx + 2] * G5[dy + 2] / 256;
+    for (dy = -1, k = 0; dy <= 1; dy++) {
+      for (dx = -1; dx <= 1; dx++, k++) {
+        for (var wy = -2, mm = 0; wy <= 2; wy++) for (var wx = -2; wx <= 2; wx++, mm++) slot[k * 25 + mm] = (dy + wy + 3) * 7 + (dx + wx + 3);
+      }
+    }
+    for (dy = 0, s = 0; dy < 7; dy++) for (dx = 0; dx < 7; dx++, s++) soff[s] = (dy - 3) * W + (dx - 3);
+
+    for (y = 1; y < H - 1; y++) {
+      for (x = 1; x < W - 1; x++) {
+        var su = 0, st = 0;
+        for (k = 0; k < 9; k++) { i = y * W + x + o9[k]; su += h9[k] * (bp[i] ? 255 : 0); st += h9[k] * T[i]; }
+        U[y * W + x] = su; TB[y * W + x] = st;
+      }
+    }
+    var A1 = new Float64Array(n), A2 = new Float64Array(n), A3 = new Float64Array(n), B1 = new Float64Array(n), B2 = new Float64Array(n), S0 = new Float64Array(n);
+    var a1, a2, a3, b1, b2, ci, pi, j;
+    for (y = P; y < P + h; y++) {
+      for (x = P; x < P + w; x++) {
+        a1 = a2 = a3 = b1 = b2 = 0;
+        for (dy = -2, m = 0; dy <= 2; dy++) {
+          for (dx = -2; dx <= 2; dx++, m++) {
+            j = (y + dy) * W + x + dx;
+            var u = U[j], tt = T[j], gw = g25[m];
+            a1 += gw * u; a2 += gw * u * u; a3 += gw * u * tt; b1 += gw * tt; b2 += gw * tt * tt;
+          }
+        }
+        i = y * W + x; A1[i] = a1; A2[i] = a2; A3[i] = a3; B1[i] = b1; B2[i] = b2;
+        S0[i] = (2 * (a3 - a1 * b1) + SSIM_C2) / ((a2 - a1 * a1) + (b2 - b1 * b1) + SSIM_C2);
+      }
+    }
+    var dA1 = new Float64Array(49), dA2 = new Float64Array(49), dA3 = new Float64Array(49), S1 = new Float64Array(49);
+    var NORM = 1 / (255 * 255), pass, changed, delta, du, u0, tp, c1, dTone, dStruct, wgt, sl, sx, sy, ys, ye, ystep, xs, xe, xstep;
+    for (pass = 0; pass < 6; pass++) {
+      changed = 0;
+      if (pass & 1) { ys = h - 1; ye = -1; ystep = -1; xs = w - 1; xe = -1; xstep = -1; }
+      else { ys = 0; ye = h; ystep = 1; xs = 0; xe = w; xstep = 1; }
+      for (sy = ys; sy !== ye; sy += ystep) {
+        for (sx = xs; sx !== xe; sx += xstep) {
+          ci = (sy + P) * W + sx + P;
+          delta = bp[ci] ? -255 : 255;
+          dA1.fill(0); dA2.fill(0); dA3.fill(0);
+          dTone = 0;
+          for (k = 0; k < 9; k++) {
+            pi = ci + o9[k]; du = delta * h9[k]; u0 = U[pi]; tp = T[pi];
+            dTone += du * (2 * (u0 - TB[pi]) + du);
+            c1 = 2 * u0 * du + du * du;
+            for (m = 0; m < 25; m++) {
+              sl = slot[k * 25 + m]; wgt = g25[m];
+              dA1[sl] += wgt * du; dA2[sl] += wgt * c1; dA3[sl] += wgt * du * tp;
+            }
+          }
+          dStruct = 0;
+          for (s = 0; s < 49; s++) {
+            j = ci + soff[s];
+            if (!inside[j]) continue;
+            a1 = A1[j] + dA1[s]; a2 = A2[j] + dA2[s]; a3 = A3[j] + dA3[s]; b1 = B1[j]; b2 = B2[j];
+            S1[s] = (2 * (a3 - a1 * b1) + SSIM_C2) / ((a2 - a1 * a1) + (b2 - b1 * b1) + SSIM_C2);
+            dStruct += S0[j] - S1[s];
+          }
+          if (dTone * NORM + STRUCT_BETA * dStruct < -1e-4) {
+            bp[ci] ^= 1; changed++;
+            for (k = 0; k < 9; k++) U[ci + o9[k]] += delta * h9[k];
+            for (s = 0; s < 49; s++) {
+              j = ci + soff[s];
+              if (!inside[j]) continue;
+              A1[j] += dA1[s]; A2[j] += dA2[s]; A3[j] += dA3[s]; S0[j] = S1[s];
+            }
+          }
+        }
+      }
+      if (!changed) break;
+    }
+    for (y = 0; y < h; y++) for (x = 0; x < w; x++) b0[y * w + x] = bp[(y + P) * W + x + P];
+    return b0;
+  }
+
   function quantize(t, A, w, h, mode, bias) {
     var n = w * h, i, thr, out, b;
     switch (mode) {
@@ -461,7 +555,8 @@
       case "floyd":    return floyd(t, w, h, 128);
       default:
         b = floyd(t, w, h, 128);
-        if (n <= REFINE_LIMIT) refine(t, b, w, h);
+        if (n <= STRUCT_LIMIT) refineStructure(t, b, w, h);
+        else if (n <= REFINE_LIMIT) refine(t, b, w, h);
         return b;
     }
   }
@@ -501,7 +596,9 @@
         if (rows > MAX_ROWS) { rows = MAX_ROWS; cols = Math.max(1, Math.floor(rows * ASPECT * cw / ch)); }   // very tall picture: keep its proportions
         rows = Math.max(1, rows);
         var pw = cols * 2, ph = rows * 4, n = pw * ph;
-        var detail = Math.max(0, Math.min(100, +o.detail)) / 100;
+        var tiny = Math.max(0, Math.min(1, (120 - pw) / 72));            // 1 up to ~24 chars, fades out by ~60 chars
+        var detail = Math.min(1, Math.max(0, Math.min(100, +o.detail)) / 100 * (1 + 0.5 * tiny));
+        var sharpAmt = Math.min(1, Math.max(0, Math.min(100, +o.sharp)) / 100 * (1 + 0.67 * tiny)) * 2.2;
         var small = Math.max(0, Math.min(1, (240 - pw) / 180));          // 1 for tiny pictures, 0 from ~120 chars up
         var lambda = detail * 0.95;
         var clarity = detail * 0.9 * (1 + 0.8 * small) * (o.cmul == null ? 1 : o.cmul);
@@ -517,8 +614,8 @@
         var k3 = k2 + "|" + (o.invert ? 1 : 0);
         var ink = stage("ink", k3, function () { return inkStage(tone, g.A, n, o.invert); });
 
-        var k4 = k3 + "|" + o.sharp;
-        var sh = stage("sharp", k4, function () { return sharpen(ink, pw, ph, o.sharp / 100 * 2.2); });
+        var k4 = k3 + "|" + sharpAmt.toFixed(3);
+        var sh = stage("sharp", k4, function () { return sharpen(ink, pw, ph, sharpAmt); });
 
         var k5 = k4 + "|" + mode + "|" + o.thr;
         var bits = stage("bits", k5, function () { return quantize(sh, g.A, pw, ph, mode, o.thr); });
